@@ -8,11 +8,25 @@ import java.net.http.HttpResponse;
 import org.json.JSONObject;
 
 class RequestHandler {
-    private static final String apiUrl = "https://www.tagesschau.de/api2";
+    private static final int SEARCH_PAGE_SIZE = 15;
+    private static final String API_URL = "https://www.tagesschau.de/api2";
+
     private HttpClient client;
 
     public RequestHandler() {
         this.client = HttpClient.newHttpClient();
+    }
+
+    public JSONObject getSearchResults(String query, int page) throws ApiRequestFailureExpection {
+        RequestParameter[] params = new RequestParameter[] {
+            new RequestParameter("searchText", query),
+            new RequestParameter("resultPage", page + ""),
+            new RequestParameter("pageSize", this.SEARCH_PAGE_SIZE + "")
+        };
+
+        // Sende die Anfrage mit den Parametern
+        JSONObject response = sendRequest("search", params);
+        return response;
     }
 
     public JSONObject getNews(Region[] regions, Topic topic) throws ApiRequestFailureExpection {
@@ -52,7 +66,7 @@ class RequestHandler {
     private JSONObject sendRequest(String endpoint, RequestParameter[] params) throws ApiRequestFailureExpection {
         try {
             // Erstelle url für die Anfrage
-            String url = this.apiUrl + "/" + endpoint + "/";
+            String url = this.API_URL + "/" + endpoint + "/";
             if(params.length != 0) {
                 url += "?";
 
