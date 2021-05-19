@@ -2,13 +2,19 @@ import org.json.JSONObject;
 
 class Program {
     public static void main(String[] args) {
-        String jsonString = "{ \"text\": \"Hello World!\" }";
+        
+    }
+}
 
-        try {
-            JSONObject jsonObj = new JSONObject(jsonString);
+// Expection Type
+class AppException extends Exception {
+    private String details;
 
-            System.out.println(jsonObj.get("text"));
-        }
-        catch (Exception _e) { System.out.println("Failed to parse JSON"); }
+    AppException(String details) {
+        this.details = details;
+    }
+
+    public String getDetails() {
+        return this.details;
     }
 }
