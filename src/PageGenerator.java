@@ -57,6 +57,60 @@ class PageGenorator {
 
         return homepage;
     }
+
+    public String generateNewsPage(String verifiedSafeUrl) throws AppException {
+        String page = "";
+        
+        try {
+            // Sende Anfrage
+            JSONObject newsArticle = rq.executePreformedRequest(verifiedSafeUrl);
+            JSONArray content = newsArticle.getJSONArray("content");
+
+            // Zeit und Datum
+            String dateAndTime = newsArticle.getString("date");
+            String date = dateAndTime.substring(0, 10);
+            String time = dateAndTime.substring(11, 11 + 5);
+
+            // Anfang
+            page += "#" + newsArticle.getString("title") + "\nTEXT_INFO_LINE_GOES_HERE\n\n";
+
+            // Füge alle Paragraphen hinzu
+            String reporterLine = "";
+            for(Object paragraphObj : content) {
+                JSONObject paragraph = (JSONObject)paragraphObj;
+
+                String paraType = paragraph.getString("type");
+                if(paraType.equals("text")) {
+                    String paraText = paragraph.getString("value");
+                    if(paraText.startsWith("<em>")) { // Für Reporter
+                        reporterLine = removeTags(paraText) + " "; // Leerzeichen wegen Datum
+                    }
+                    else if(paraText.startsWith("<strong>Über dieses Thema berichtete")) { // Extra Zeile am Ende, weil es inhaltlich nicht zum Artikel gehört
+                        page += "\n" + removeTags(paraText) + "\n";
+                    }
+                    else {
+                        page += removeTags(paraText) + "\n";
+                    }
+                }
+                else if(paraType.equals("headline")) {
+                    page += "###" + removeTags(paragraph.getString("value")) + "\n";
+                }
+            }
+
+            // Info über den Text
+            String textInfoLine = String.format("%s%s %s", reporterLine, date, time);
+            page = page.replace("TEXT_INFO_LINE_GOES_HERE", textInfoLine);
+        }
+        catch(Exception e) {
+            throw new MissingJsonValueException(e.toString());
+        }
+
+        return page;
+    }
+
+    private static String removeTags(String str) {
+        return str.replaceAll("<[\\w\\W]*?>", "");
+    }
 }
 
 class MissingJsonValueException extends AppException {

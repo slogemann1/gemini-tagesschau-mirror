@@ -21,7 +21,7 @@ class RequestHandler {
         RequestParameter[] params = new RequestParameter[] {
             new RequestParameter("searchText", query),
             new RequestParameter("resultPage", page + ""),
-            new RequestParameter("pageSize", this.SEARCH_PAGE_SIZE + "")
+            new RequestParameter("pageSize", SEARCH_PAGE_SIZE + "")
         };
 
         // Sende die Anfrage mit den Parametern
@@ -63,10 +63,26 @@ class RequestHandler {
         return response;
     }
 
+    public JSONObject executePreformedRequest(String verifiedSafeUrl) throws ApiRequestFailureExpection {
+        try {
+            // Erstelle und sende Anfrage
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(verifiedSafeUrl))
+                .build();
+            HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            JSONObject parsedObject = new JSONObject(response.body());
+            return parsedObject;
+        }
+        catch(Exception e) {
+            throw new ApiRequestFailureExpection(e.toString());
+        }
+    }
+
     private JSONObject sendRequest(String endpoint, RequestParameter[] params) throws ApiRequestFailureExpection {
         try {
             // Erstelle url für die Anfrage
-            String url = this.API_URL + "/" + endpoint + "/";
+            String url = API_URL + "/" + endpoint + "/";
             if(params.length != 0) {
                 url += "?";
 
@@ -81,7 +97,7 @@ class RequestHandler {
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
 
             // Erstelle ein JSONObject aus der Antwort
             JSONObject parsedObject = new JSONObject(response.body());
