@@ -14,7 +14,7 @@ class PageGenorator {
         this.rq = rq;
     }
 
-    public String generateHompage() throws AppException {
+    public String generateHomepage() throws AppException {
         JSONObject homepageJson = rq.getHompage();
         
         // Datum
