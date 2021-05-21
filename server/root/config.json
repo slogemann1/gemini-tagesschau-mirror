@@ -1,0 +1,27 @@
+{
+    "default_whitelist": false,
+    "dynamic": [
+        {
+            "link_path": "index.gmi",
+            "program_path": "java",
+            "args": [ "-jar", "tagesschau-mirror.jar", "action='getHomepage'" ],
+            "cmd_env": [],
+            "cmd_working_dir": "./cgi",
+            "cache": true
+        },
+        {
+            "link_path": "do-request",
+            "program_path": "java",
+            "args": [ "-jar", "tagesschau-mirror.jar", "action='doRequest'" ],
+            "cmd_env": [],
+            "query": {
+                "display_text": "This is an internal parameter and is not intended for manual input",
+                "private": false
+            },
+            "mime_type": "text/gemini",
+            "cmd_working_dir": "./cgi",
+            "cache": false
+        }
+    ],
+    "config_files": []
+}

@@ -1,2 +1,6 @@
 /target
 /lib
+/server/log.txt
+/server/temp
+/server/cgi
+/server/data

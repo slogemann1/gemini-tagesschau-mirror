@@ -1,0 +1,20 @@
+{
+    "domain": "127.0.0.1",
+    "root": "root",
+    "tls_profile": "data/profile.pfx",
+    "profile_password": "password",
+    "config_files": [
+        "config.json"
+    ],
+    "max_dynamic_gen_time": 10,
+    "cache_time": 300,
+    "default_preload": true,
+    "never_exit": false,
+    "serve_errors": false,
+    "log": true,
+    "default_lang": "de",
+    "default_charset": "utf-8",
+    "homepage": "index.gmi",
+    "ipv4": true,
+    "ipv6": false
+}
