@@ -10,15 +10,18 @@ class Program {
 
         // Lese argumente
         for(String arg : args) {
-            if(arg.startsWith("unique_file_path=")) {
-                outfilePath = arg.split("unique_file_path=")[1];
+            if(arg.startsWith("unique_file_path='")) {
+                outfilePath = arg.split("unique_file_path='")[1];
+                outfilePath = outfilePath.substring(0, outfilePath.length() - 1);
             }
-            else if(arg.startsWith("action=")) {
-                action = arg.split("action=")[1];
+            else if(arg.startsWith("action='")) {
+                action = arg.split("action='")[1];
+                action = action.substring(0, action.length() - 1);
             }
-            else if(arg.startsWith("query=")) {
-                String[] argSplit = arg.split("query=");
+            else if(arg.startsWith("query='")) {
+                String[] argSplit = arg.split("query='");
                 query = argSplit.length > 1 ? argSplit[1] : "";
+                query = query.substring(0, query.length() - 1);
             }
         }
 
@@ -36,6 +39,9 @@ class Program {
             if(action.equals("getHomepage")) {
                 fileText = pg.generateHomepage();
             }
+            else if(action.equals("doRequest")) {
+                fileText = handleDoRequest(pg, query);
+            }
             else {
                 returnCgiError(outfilePath);
             }
@@ -46,6 +52,16 @@ class Program {
         }
 
         writeToFile(outfilePath, fileText);
+    }
+
+    static String handleDoRequest(PageGenorator pg, String queryUrl) throws AppException {
+        if(queryUrl.startsWith("https://www.tagesschau.de")
+        || queryUrl.startsWith("https://wetter.tagesschau.de")) {
+            return pg.generateNewsPage(queryUrl);
+        }
+        else {
+            throw new UnauthorizedRequestException("The requested request url " + queryUrl + " is not whitelisted");
+        }
     }
 
     static void returnCgiError(String nullableFilename) throws IOException {
@@ -74,4 +90,8 @@ class AppException extends Exception {
     public String getDetails() {
         return this.details;
     }
+}
+
+class UnauthorizedRequestException extends AppException {
+    UnauthorizedRequestException(String details) { super(details); }
 }

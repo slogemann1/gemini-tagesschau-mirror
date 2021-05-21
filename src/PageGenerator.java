@@ -7,7 +7,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 class PageGenorator {
-    private static final String GEMINI_URL = "gemini://localhost";
+    private static final String GEMINI_URL = "gemini://127.0.0.1";
     private RequestHandler rq;
     
     public PageGenorator(RequestHandler rq) {
