@@ -14,6 +14,7 @@ classDir=$(targetDir)/classes
 # Misc
 srcFiles=$(wildcard $(srcDir)/*.java)
 entryClass=Program
+projName=tagesschau-mirror
 
 # Libraries
 allLibs=$(libDir)/$(libJsonJavaJar)
@@ -27,11 +28,17 @@ all:
 	make build
 	make run
 
-build: $(classDir)
-	$(jc) -d $(classDir) $(srcFiles) -cp $(allLibs)
+build: | $(classDir)
+	$(jc) -Xlint:deprecation -d $(classDir) $(srcFiles) -cp $(allLibs)
+
+jar: build | $(jarDir)
+	jar -c -f $(jarDir)/$(projName).jar -e Bootstrap -C $(classDir) . -C $(libDir) .
 
 run:
-	$(jvm) -cp "$(classDir);$(allLibs)" $(entryClass)
+	$(jvm) -cp "$(classDir);$(allLibs)" $(entryClass) $(RUNARGS)
+
+clean:
+	rm -r $(targetDir)
 
 setup: # Install libraries
 	make installLibJsonJava
@@ -44,9 +51,9 @@ installLibJsonJava:
 # Directories
 $(targetDir):
 	mkdir $@
-$(jarDir): $(targetDir)
+$(jarDir): | $(targetDir)
 	mkdir $@
-$(classDir): $(targetDir)
+$(classDir): | $(targetDir)
 	mkdir $@
 $(libDir):
 	mkdir $@
