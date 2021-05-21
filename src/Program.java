@@ -57,7 +57,15 @@ class Program {
     static String handleDoRequest(PageGenorator pg, String queryUrl) throws AppException {
         if(queryUrl.startsWith("https://www.tagesschau.de")
         || queryUrl.startsWith("https://wetter.tagesschau.de")) {
-            return pg.generateNewsPage(queryUrl);
+            String cacheResult = CacheHandler.retrieveCachedArticle(queryUrl);
+            if(cacheResult != null) {
+                return cacheResult;
+            }
+            else {
+                String articleContents = pg.generateNewsPage(queryUrl);
+                CacheHandler.cacheArticle(queryUrl, articleContents);
+                return articleContents;
+            }
         }
         else {
             throw new UnauthorizedRequestException("The requested request url " + queryUrl + " is not whitelisted");
