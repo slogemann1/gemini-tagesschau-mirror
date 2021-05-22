@@ -138,9 +138,58 @@ enum Region {
     THUERINGEN(16);
 
     public final int regionId;
+    private static final String[] nameLookupTable = new String[] {
+        "Baden-Württemberg",
+        "Bayern",
+        "Berlin",
+        "Brandenburg",
+        "Bremen",
+        "Hamburg",
+        "Hessen",
+        "Mecklenburg-Vorpommern",
+        "Niedersachsen",
+        "Nordrhein-Westfahlen",
+        "Reinland-Pfalz",
+        "Saarland",
+        "Sachsen",
+        "Sachsen-Anhalt",
+        "Schleswig-Holstein",
+        "Thüringen"
+    };
+    private static final Region[] regionLookupTable = new Region[] {
+        BADEN_WUERTTEMBERG,
+        BAYERN,
+        BERLIN,
+        BRANDENBURG,
+        BREMEN,
+        HAMBURG,
+        HESSEN,
+        MECKLENBURG_VORPOMMERN,
+        NIEDERSACHSEN,
+        NORDRHEIN_WESTFAHLEN,
+        REINLAND_PFALZ,
+        SAARLAND,
+        SACHSEN,
+        SACHSEN_ANHALT,
+        SCHLESWIG_HOLSTEIN,
+        THUERINGEN
+    };
 
     private Region(int regionId) {
         this.regionId = regionId;
+    }
+
+    public static Region fromId(int regionId) {
+        if(regionId > 0 && regionId < 17) {
+            return regionLookupTable[regionId - 1];
+        }
+        else {
+            return null;
+        }
+    }
+
+    public static String uncheckedNameFromId(int regionId) {
+        return nameLookupTable[regionId - 1];
     }
 }
 

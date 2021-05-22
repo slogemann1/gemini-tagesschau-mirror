@@ -7,7 +7,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 class PageGenorator {
-    private static final String GEMINI_URL = "gemini://127.0.0.1";
+    private static final String GEMINI_DOMAIN = "gemini://127.0.0.1";
     private RequestHandler rq;
     
     public PageGenorator(RequestHandler rq) {
@@ -25,37 +25,77 @@ class PageGenorator {
 
 
         // Titel
-        String homepage = "# Tagesschau\n\n"
-        + "## Aktuelle Nachrichten - " + formattedDate + "\n";
+        String homepage = "# Tagesschau\n\n";
 
         try {
-            // Füge alle Nachrichten hinzu
+            // Füge generelle Nachrichten hinzu
             JSONArray newsArr = homepageJson.getJSONArray("news");
-            for(Object newsObj : newsArr) {
-                JSONObject news = (JSONObject)newsObj;
+            String generalArticlesTitle = "Aktuelle Nachrichten - " + formattedDate;
+            homepage += generateArticleList(generalArticlesTitle, newsArr);
 
-                // Erstelle neue Url
-                String newApiRequest = news.getString("details"); // Wichtig!: Adresse muss geprüft werden
-                String newLink = GEMINI_URL + "/do-request?" + newApiRequest; // Eigene "do-request" Endpoint
-
-                // Zeit der Publikation
-                String time = news.getString("date").substring(11, 11+5);
- 
-                // Füge Link mit Titel ein und erster Satz hinzu
-                homepage += String.format("=>%s %s\n", newLink, news.getString("title"));
-                if(news.has("firstSentence")) {
-                    homepage += String.format("%s - %s \n\n", time, news.get("firstSentence"));
-                }
-                else {
-                    homepage += "\n";
-                }
-            }
+            // Füge regionale Auswahl an Nachrichten hinzu
+            JSONArray regionalArr = homepageJson.getJSONArray("regional");
+            homepage += generateRegionalArticleList("Regional", regionalArr);
+            
         }
         catch (Exception e) {
             throw new MissingJsonValueException(e.toString());
         }
 
         return homepage;
+    }
+
+    private String generateArticleList(String title, JSONArray articleList) throws Exception {
+        String page = "## " + title + "\n";
+        
+        for(Object articleObj : articleList) {
+            JSONObject article = (JSONObject)articleObj;
+
+            // Erstelle neue Url
+            String newApiRequest = article.getString("details"); // Wichtig!: Adresse muss geprüft werden
+            String newLink = GEMINI_DOMAIN + "/do-request?" + newApiRequest; // Eigene "do-request" Endpoint
+
+            // Zeit der Publikation
+            String time = article.getString("date").substring(11, 11+5);
+
+            // Füge Link mit Titel ein und erster Satz hinzu
+            page += String.format("=>%s %s\n", newLink, article.getString("title"));
+            if(article.has("firstSentence")) {
+                page += String.format("%s - %s \n\n", time, article.get("firstSentence"));
+            }
+            else {
+                page += "\n";
+            }
+        }
+
+        return page;
+    }
+
+    private String generateRegionalArticleList(String title, JSONArray articleList) throws Exception {
+        String page = "## " + title + "\n";
+
+        int regionId = 1;
+        for(Object articleObj : articleList) {
+            JSONObject article = (JSONObject)articleObj;
+            
+            if(regionId > 16) {
+                break; //TODO: add logging (api change)
+            }
+
+            String regionalArticlesLink = GEMINI_DOMAIN + "/regional?" + regionId;
+            String regionName = Region.uncheckedNameFromId(regionId);
+
+            String articleApiRequest = article.getString("details");
+            String articleLink = GEMINI_DOMAIN + "/do-request?" + articleApiRequest;
+
+            page += String.format("### %s\n", regionName);
+            page += String.format("=>%s Aktuelle Nachrichten\n", regionalArticlesLink);
+            page += String.format("=>%s %s\n\n", articleLink, article.getString("title"));
+
+            regionId++;
+        }
+
+        return page;
     }
 
     public String generateNewsPage(String verifiedSafeUrl) throws AppException {
