@@ -79,7 +79,16 @@ class Program {
                 throw new InvalidRequestQueryException("The \"/regional\" endpoint is only to be used internally and only accepts numbers from 1 to 16");
             }
 
-            return pg.generateRegionalHomepage(regionId);
+            String articleName = "regional-" + query;
+            String cacheResult = CacheHandler.retrieveCachedArticle(articleName);
+            if(cacheResult != null) {
+                return cacheResult;
+            }
+            else {
+                String generatedPage = pg.generateRegionalHomepage(regionId);
+                CacheHandler.cacheArticle(articleName, generatedPage);
+                return generatedPage;
+            }
         }
         catch(NumberFormatException e) {
             throw new InvalidRequestQueryException("The \"/regional\" endpoint is only to be used internally and only accepts numbers as parameters");
