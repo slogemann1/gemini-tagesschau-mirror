@@ -1,11 +1,15 @@
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 
 class Program {
+    private static final String LOG_FILE = "log.txt";
+
     public static void main(String[] args) throws IOException {
         String outfilePath = null;
-        String action = null; // Possible values: doRequest, getHomepage
+        String action = null; // Possible values: doRequest, getHomepage, getRegional
         String query = null;
 
         // Lese argumente
@@ -51,12 +55,13 @@ class Program {
         }
         catch(AppException e) {
             writeToFile(outfilePath, e.toString() + ": " + e.getDetails());
+            log(e.toString() + ": " + e.getInternalDetails());
 
             int exitCode = 42;
             if(e instanceof UnauthorizedRequestException) {
                 exitCode = 53; // Server akzeptiert die Proxy-Anfrage nicht
             }
-            else if(e instanceof ApiRequestFailureExpection) {
+            else if(e instanceof ApiRequestFailureException) {
                 exitCode = 43; // Proxy Fehler
             }
             else if(e instanceof MissingJsonValueException) {
@@ -91,7 +96,7 @@ class Program {
             }
         }
         catch(NumberFormatException e) {
-            throw new InvalidRequestQueryException("The \"/regional\" endpoint is only to be used internally and only accepts numbers as parameters");
+            throw new InvalidRequestQueryException("The \"/regional\" endpoint is only to be used internally and only accepts numbers as parameters", e);
         }
     }
 
@@ -126,25 +131,73 @@ class Program {
         bw.write(text);
         bw.close();
     }
+
+    static void log(String message) {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String timeFormatted = formatter.format(now);
+
+            FileWriter fw = new FileWriter(LOG_FILE, true);
+            fw.write(timeFormatted + " | " + message + "\n");
+            fw.close();
+        }
+        catch(IOException e) {
+            System.out.println("Failed to log " + e);
+        }
+    }
 }
 
 // Expection Type
 class AppException extends Exception {
     private String details;
+    private String internalDetails;
 
-    AppException(String details) {
+    private void setInternalDetailsWithException(Exception e) {
+        if(e instanceof AppException) {
+            this.internalDetails = ((AppException)e).getInternalDetails();
+        }
+        else {
+            this.internalDetails = e.toString() + " { " + e + " }";
+        }
+    }
+
+    public AppException(String details, Exception e) {
         this.details = details;
+        this.setInternalDetailsWithException(e);
+    }
+
+    public AppException(String details) {
+        this.details = details;
+        this.internalDetails = details;
+    }
+
+    public AppException(Exception e) {
+        this.details = defaultMessage();
+        this.setInternalDetailsWithException(e);
+    }
+
+    protected String defaultMessage() {
+        return "An error has occured within the application";
     }
 
     public String getDetails() {
         return this.details;
     }
+
+    public String getInternalDetails() {
+        return this.internalDetails;
+    }
 }
 
 class UnauthorizedRequestException extends AppException {
-    UnauthorizedRequestException(String details) { super(details); }
+    public UnauthorizedRequestException(String details, Exception e) { super(details, e); }
+    public UnauthorizedRequestException(String details) { super(details); }
+    public UnauthorizedRequestException(Exception e) { super(e); }
 }
 
 class InvalidRequestQueryException extends AppException {
-    InvalidRequestQueryException(String details) { super(details); };
+    public InvalidRequestQueryException(String details, Exception e) { super(details, e); }
+    public InvalidRequestQueryException(String details) { super(details); }
+    public InvalidRequestQueryException(Exception e) { super(e); }
 }

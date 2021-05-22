@@ -35,7 +35,7 @@ class PageGenorator {
             
         }
         catch (Exception e) {
-            throw new MissingJsonValueException(e.toString());
+            throw new MissingJsonValueException(e);
         }
 
         return homepage;
@@ -52,7 +52,7 @@ class PageGenorator {
             regionalHomepage += generateArticleList(sectionTitle, articleList);
         }
         catch(Exception e) {
-            throw new MissingJsonValueException(e.toString());
+            throw new MissingJsonValueException(e);
         }
 
         return regionalHomepage;
@@ -155,7 +155,7 @@ class PageGenorator {
             page = page.replace("TEXT_INFO_LINE_GOES_HERE", textInfoLine);
         }
         catch(Exception e) {
-            throw new MissingJsonValueException(e.toString());
+            throw new MissingJsonValueException(e);
         }
 
         return page;
@@ -175,5 +175,10 @@ class PageGenorator {
 }
 
 class MissingJsonValueException extends AppException {
+    MissingJsonValueException(String details, Exception e) { super(details, e); }
     MissingJsonValueException(String details) { super(details); }
+    MissingJsonValueException(Exception e) { super(e); }
+
+    @Override
+    protected String defaultMessage() { return "An error ocurred while parsing the api response json (this could be an api change)";}
 }

@@ -17,7 +17,7 @@ class RequestHandler {
         this.client = HttpClient.newHttpClient();
     }
 
-    public JSONObject getSearchResults(String query, int page) throws ApiRequestFailureExpection {
+    public JSONObject getSearchResults(String query, int page) throws ApiRequestFailureException {
         RequestParameter[] params = new RequestParameter[] {
             new RequestParameter("searchText", query),
             new RequestParameter("resultPage", page + ""),
@@ -29,7 +29,7 @@ class RequestHandler {
         return response;
     }
 
-    public JSONObject getNews(Region[] regions, Topic topic) throws ApiRequestFailureExpection {
+    public JSONObject getNews(Region[] regions, Topic topic) throws ApiRequestFailureException {
         ArrayList<RequestParameter> params = new ArrayList<RequestParameter>();
 
         // Füge Regionen hinzu
@@ -57,13 +57,13 @@ class RequestHandler {
         return response;
     }
 
-    public JSONObject getHompage() throws ApiRequestFailureExpection {
+    public JSONObject getHompage() throws ApiRequestFailureException {
         // Sende die Anfrage
         JSONObject response = sendRequest("homepage", new RequestParameter[0]);
         return response;
     }
 
-    public JSONObject executePreformedRequest(String verifiedSafeUrl) throws ApiRequestFailureExpection {
+    public JSONObject executePreformedRequest(String verifiedSafeUrl) throws ApiRequestFailureException {
         try {
             // Erstelle und sende Anfrage
             HttpRequest request = HttpRequest.newBuilder()
@@ -75,11 +75,11 @@ class RequestHandler {
             return parsedObject;
         }
         catch(Exception e) {
-            throw new ApiRequestFailureExpection(e.toString());
+            throw new ApiRequestFailureException(e);
         }
     }
 
-    private JSONObject sendRequest(String endpoint, RequestParameter[] params) throws ApiRequestFailureExpection {
+    private JSONObject sendRequest(String endpoint, RequestParameter[] params) throws ApiRequestFailureException {
         try {
             // Erstelle url für die Anfrage
             String url = API_URL + "/" + endpoint + "/";
@@ -104,7 +104,7 @@ class RequestHandler {
             return parsedObject;
         }
         catch(Exception e) {
-            throw new ApiRequestFailureExpection(e.toString());
+            throw new ApiRequestFailureException(e);
         }
     }
 
@@ -202,6 +202,11 @@ enum Topic {
     }
 }
 
-class ApiRequestFailureExpection extends AppException {
-    ApiRequestFailureExpection(String details) { super(details); }
+class ApiRequestFailureException extends AppException {
+    ApiRequestFailureException(String details) { super(details); }
+    ApiRequestFailureException(Exception e) { super(e); }
+    ApiRequestFailureException(String details, Exception e) { super(details, e); };
+
+    @Override
+    protected String defaultMessage() { return "An error ocurred when making a request to the api"; }
 }
