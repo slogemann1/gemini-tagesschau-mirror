@@ -92,7 +92,8 @@ class PageGenorator {
             JSONObject article = (JSONObject)articleObj;
             
             if(regionId > 16) {
-                break; //TODO: add logging (api change)
+                Program.log("Api may have changed -> see PageGenerator.java at generateRegionalArticleList");
+                break;
             }
 
             String regionalArticlesLink = GEMINI_DOMAIN + "/regional?" + regionId;
