@@ -18,11 +18,7 @@ class PageGenorator {
         JSONObject homepageJson = rq.getHompage();
         
         // Datum
-        ZoneId germanyTZ = ZoneId.of("GMT+02:00");
-        LocalDateTime currentDate = LocalDateTime.now(germanyTZ);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String formattedDate = currentDate.format(formatter);
-
+        String formattedDate = getCurrentDate();
 
         // Titel
         String homepage = "# Tagesschau\n\n";
@@ -43,6 +39,23 @@ class PageGenorator {
         }
 
         return homepage;
+    }
+
+    public String generateRegionalHomepage(int checkedRegionId) throws AppException {
+        Region region = Region.uncheckedFromId(checkedRegionId);
+        JSONObject regionalNews = rq.getNews(new Region[] { region }, null);
+        String regionalHomepage = "# Tagesschau - " + Region.uncheckedNameFromId(region.regionId) + "\n\n";
+
+        try {
+            String sectionTitle = "Aktuelle Nachrichten - " + getCurrentDate();
+            JSONArray articleList = regionalNews.getJSONArray("news");
+            regionalHomepage += generateArticleList(sectionTitle, articleList);
+        }
+        catch(Exception e) {
+            throw new MissingJsonValueException(e.toString());
+        }
+
+        return regionalHomepage;
     }
 
     private String generateArticleList(String title, JSONArray articleList) throws Exception {
@@ -150,6 +163,14 @@ class PageGenorator {
 
     private static String removeTags(String str) {
         return str.replaceAll("<[\\w\\W]*?>", "");
+    }
+
+    private static String getCurrentDate() {
+        ZoneId germanyTZ = ZoneId.of("GMT+02:00");
+        LocalDateTime currentDate = LocalDateTime.now(germanyTZ);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String formattedDate = currentDate.format(formatter);
+        return formattedDate;
     }
 }
 

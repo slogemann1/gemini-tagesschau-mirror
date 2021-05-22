@@ -179,13 +179,8 @@ enum Region {
         this.regionId = regionId;
     }
 
-    public static Region fromId(int regionId) {
-        if(regionId > 0 && regionId < 17) {
-            return regionLookupTable[regionId - 1];
-        }
-        else {
-            return null;
-        }
+    public static Region uncheckedFromId(int regionId) {
+        return regionLookupTable[regionId - 1];
     }
 
     public static String uncheckedNameFromId(int regionId) {

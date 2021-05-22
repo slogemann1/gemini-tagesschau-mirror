@@ -42,6 +42,9 @@ class Program {
             else if(action.equals("doRequest")) {
                 fileText = handleDoRequest(pg, query);
             }
+            else if(action.equals("getRegional")) {
+                fileText = handleRegionalRequest(pg, query);
+            }
             else {
                 returnCgiError(outfilePath);
             }
@@ -59,11 +62,28 @@ class Program {
             else if(e instanceof MissingJsonValueException) {
                 exitCode = 42; // Cgi Fehler
             }
+            else if(e instanceof InvalidRequestQueryException) {
+                exitCode = 42; // Cgi Fehler (es gibt keinen passenderen Fehler)
+            }
 
             System.exit(exitCode);
         }
 
         writeToFile(outfilePath, fileText);
+    }
+
+    static String handleRegionalRequest(PageGenorator pg, String query) throws AppException {
+        try {
+            int regionId = Integer.parseInt(query);
+            if(regionId > 17 || regionId < 1) {
+                throw new InvalidRequestQueryException("The \"/regional\" endpoint is only to be used internally and only accepts numbers from 1 to 16");
+            }
+
+            return pg.generateRegionalHomepage(regionId);
+        }
+        catch(NumberFormatException e) {
+            throw new InvalidRequestQueryException("The \"/regional\" endpoint is only to be used internally and only accepts numbers as parameters");
+        }
     }
 
     static String handleDoRequest(PageGenorator pg, String queryUrl) throws AppException {
@@ -114,4 +134,8 @@ class AppException extends Exception {
 
 class UnauthorizedRequestException extends AppException {
     UnauthorizedRequestException(String details) { super(details); }
+}
+
+class InvalidRequestQueryException extends AppException {
+    InvalidRequestQueryException(String details) { super(details); };
 }
