@@ -46,9 +46,21 @@ class Program {
                 returnCgiError(outfilePath);
             }
         }
-        catch (AppException e) {
+        catch(AppException e) {
             writeToFile(outfilePath, e.toString() + ": " + e.getDetails());
-            System.exit(42);
+
+            int exitCode = 42;
+            if(e instanceof UnauthorizedRequestException) {
+                exitCode = 53; // Server akzeptiert die Proxy-Anfrage nicht
+            }
+            else if(e instanceof ApiRequestFailureExpection) {
+                exitCode = 43; // Proxy Fehler
+            }
+            else if(e instanceof MissingJsonValueException) {
+                exitCode = 42; // Cgi Fehler
+            }
+
+            System.exit(exitCode);
         }
 
         writeToFile(outfilePath, fileText);
