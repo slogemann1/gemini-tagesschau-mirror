@@ -1,11 +1,14 @@
 import java.util.ArrayList;
 import java.nio.charset.StandardCharsets;
+import java.io.IOException;
+import java.lang.InterruptedException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import org.json.JSONObject;
+import org.json.JSONException;
 
 class RequestHandler {
     private static final int SEARCH_PAGE_SIZE = 15;
@@ -75,7 +78,7 @@ class RequestHandler {
             JSONObject parsedObject = new JSONObject(response.body());
             return parsedObject;
         }
-        catch(Exception e) {
+        catch(JSONException | IOException | InterruptedException e) {
             throw new ApiRequestFailureException(e);
         }
     }
@@ -108,7 +111,7 @@ class RequestHandler {
             JSONObject parsedObject = new JSONObject(response.body());
             return parsedObject;
         }
-        catch(Exception e) {
+        catch(JSONException | IOException | InterruptedException e) {
             throw new ApiRequestFailureException(e);
         }
     }

@@ -1,5 +1,6 @@
 import org.json.JSONObject;
 import org.json.JSONArray;
+import org.json.JSONException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -40,7 +41,7 @@ class PageGenorator {
             homepage += "=>" + GEMINI_DOMAIN + "/topic?sport Sport\n";
             homepage += "=>" + GEMINI_DOMAIN + "/topic?video Video\n";
         }
-        catch (Exception e) {
+        catch (JSONException e) {
             throw new MissingJsonValueException(e);
         }
 
@@ -57,7 +58,7 @@ class PageGenorator {
             JSONArray articleList = regionalNews.getJSONArray("news");
             regionalHomepage += generateArticleList(sectionTitle, articleList);
         }
-        catch(Exception e) {
+        catch(JSONException e) {
             throw new MissingJsonValueException(e);
         }
 
@@ -114,7 +115,7 @@ class PageGenorator {
 
             return page;
         }
-        catch(Exception e) {
+        catch(JSONException e) {
             throw new MissingJsonValueException(e);
         }
     }
@@ -135,7 +136,7 @@ class PageGenorator {
             JSONArray articleList = news.getJSONArray("news");
             topicHomepage += generateArticleList(sectionTitle, articleList);
         }
-        catch(Exception e) {
+        catch(JSONException e) {
             throw new MissingJsonValueException(e);
         }
 
@@ -189,14 +190,14 @@ class PageGenorator {
             String textInfoLine = String.format("%s%s %s", reporterLine, date, time);
             page = page.replace("TEXT_INFO_LINE_GOES_HERE", textInfoLine);
         }
-        catch(Exception e) {
+        catch(JSONException e) {
             throw new MissingJsonValueException(e);
         }
 
         return page;
     }
 
-    private String generateArticleList(String title, JSONArray articleList) throws Exception {
+    private String generateArticleList(String title, JSONArray articleList) throws JSONException {
         String page = "## " + title + "\n";
         
         for(Object articleObj : articleList) {
@@ -241,7 +242,7 @@ class PageGenorator {
         return page;
     }
 
-    private String generateRegionalArticleList(String title, JSONArray articleList) throws Exception {
+    private String generateRegionalArticleList(String title, JSONArray articleList) throws JSONException {
         String page = "## " + title + "\n";
 
         int regionId = 1;
