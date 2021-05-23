@@ -40,6 +40,8 @@ class PageGenorator {
             homepage += "=>" + GEMINI_DOMAIN + "/topic?wirtschaft Wirtschaft\n";
             homepage += "=>" + GEMINI_DOMAIN + "/topic?sport Sport\n";
             homepage += "=>" + GEMINI_DOMAIN + "/topic?video Video\n";
+
+            homepage += "## Suche\n=>" + GEMINI_DOMAIN + "/search Nach Artikel suchen\n";
         }
         catch (JSONException e) {
             throw new MissingJsonValueException(e);
