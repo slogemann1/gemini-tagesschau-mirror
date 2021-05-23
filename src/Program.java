@@ -11,7 +11,7 @@ class Program {
 
     public static void main(String[] args) throws IOException {
         String outfilePath = null;
-        String action = null; // Possible values: doRequest, getHomepage, getRegional, getSearch
+        String action = null; // Possible values: doRequest, getHomepage, getRegional, getSearch, getTopic
         String query = null;
 
         // Lese argumente
@@ -55,6 +55,9 @@ class Program {
             else if(action.equals("getSearch")) {
                 fileText = handleSearchRequest(pg, query);
             }
+            else if(action.equals("getTopic")) {
+                fileText = handleTopicRequest(pg, query);
+            }
             else {
                 returnCgiError(outfilePath);
             }
@@ -81,6 +84,23 @@ class Program {
         }
 
         writeToFile(outfilePath, fileText);
+    }
+
+    static String handleTopicRequest(PageGenorator pg, String query) throws AppException {
+        if(!Topic.isValidName(query)) {
+            throw new InvalidRequestQueryException("The \"/topic\" endpoint is only to be used internally and accepts only specific topic parameters");
+        }
+
+        String topicPageName = query + ".gmi";
+        String cacheResult = CacheHandler.retrieveCachedArticle(topicPageName);
+        if(cacheResult == null) {
+            String generatedPage = pg.generateTopicHomepage(query);
+            CacheHandler.cacheArticle(topicPageName, generatedPage);
+            return generatedPage;
+        }
+        else {
+            return cacheResult;
+        }
     }
 
     static String handleSearchRequest(PageGenorator pg, String query) throws AppException {

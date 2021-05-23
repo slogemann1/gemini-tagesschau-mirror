@@ -205,6 +205,24 @@ enum Topic {
     private Topic(String topicName) {
         this.topicName = topicName;
     }
+
+    public static boolean isValidName(String topicName) {
+        for(Topic t : Topic.values()) {
+            if(t.topicName.equals(topicName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static Topic fromValidName(String topicName) {
+        for(Topic t : Topic.values()) {
+            if(t.topicName.equals(topicName)) {
+                return t;
+            }
+        }
+        return null;
+    }
 }
 
 class ApiRequestFailureException extends AppException {

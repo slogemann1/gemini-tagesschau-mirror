@@ -6,7 +6,7 @@
     "config_files": [
         "config.json"
     ],
-    "max_dynamic_gen_time": 10,
+    "max_dynamic_gen_time": 20,
     "cache_time": 300,
     "default_preload": true,
     "never_exit": false,

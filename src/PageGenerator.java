@@ -32,7 +32,13 @@ class PageGenorator {
             // Füge regionale Auswahl an Nachrichten hinzu
             JSONArray regionalArr = homepageJson.getJSONArray("regional");
             homepage += generateRegionalArticleList("Regional", regionalArr);
-            
+
+            homepage += "## Ressort\n";
+            homepage += "=>" + GEMINI_DOMAIN + "/topic?inland Inland\n";
+            homepage += "=>" + GEMINI_DOMAIN + "/topic?ausland Ausland\n";
+            homepage += "=>" + GEMINI_DOMAIN + "/topic?wirtschaft Wirtschaft\n";
+            homepage += "=>" + GEMINI_DOMAIN + "/topic?sport Sport\n";
+            homepage += "=>" + GEMINI_DOMAIN + "/topic?video Video\n";
         }
         catch (Exception e) {
             throw new MissingJsonValueException(e);
@@ -113,6 +119,29 @@ class PageGenorator {
         }
     }
 
+    public String generateTopicHomepage(String validTopicName) throws AppException {
+        Topic topic = Topic.fromValidName(validTopicName);
+        JSONObject news = rq.getNews(new Region[] {}, topic);
+        
+        char firstChar = validTopicName.charAt(0);
+        char firstCharCaps = (char)((short)firstChar - 32);
+        String topicName = validTopicName.substring(1, validTopicName.length());
+        topicName = firstCharCaps + topicName;
+
+        String topicHomepage = "# Tagesschau - " + topicName + "\n\n";
+        
+        try {
+            String sectionTitle = "Aktuelle Nachrichten - " + getCurrentDate();
+            JSONArray articleList = news.getJSONArray("news");
+            topicHomepage += generateArticleList(sectionTitle, articleList);
+        }
+        catch(Exception e) {
+            throw new MissingJsonValueException(e);
+        }
+
+        return topicHomepage;
+    }
+
     public String generateNewsPage(String verifiedSafeUrl) throws AppException {
         String page = "";
         
@@ -173,20 +202,39 @@ class PageGenorator {
         for(Object articleObj : articleList) {
             JSONObject article = (JSONObject)articleObj;
 
+            boolean isVideo = false;
+            if(article.has("type") && article.getString("type").equals("video")) {
+                isVideo = true;
+            }
+
             // Erstelle neue Url
-            String newApiRequest = article.getString("details"); // Wichtig!: Adresse muss geprüft werden
-            String newLink = GEMINI_DOMAIN + "/do-request?" + newApiRequest; // Eigene "do-request" Endpoint
-
-            // Zeit der Publikation
-            String time = article.getString("date").substring(11, 11+5);
-
-            // Füge Link mit Titel ein und erster Satz hinzu
-            page += String.format("=>%s %s\n", newLink, article.getString("title"));
-            if(article.has("firstSentence")) {
-                page += String.format("%s - %s\n\n", time, article.get("firstSentence"));
+            String newLink;
+            if(!isVideo) {
+                String newApiRequest = article.getString("details"); // Wichtig!: Adresse muss geprüft werden
+                newLink = GEMINI_DOMAIN + "/do-request?" + newApiRequest; // Eigene "do-request" Endpoint
             }
             else {
-                page += "\n";
+                newLink = article.getJSONObject("streams").getString("h264m");
+            }
+
+            // Zeit der Publikation
+            String[] timeAndDate = timeAndDateFromIso8601(article.getString("date"));
+            String date = timeAndDate[0];
+            String time = timeAndDate[1];
+            
+            if(!isVideo) {
+                // Füge Link mit Titel ein und erster Satz hinzu
+                page += String.format("=>%s %s\n", newLink, article.getString("title"));
+                if(article.has("firstSentence")) {
+                    page += String.format("%s - %s\n\n", time, article.get("firstSentence"));
+                }
+                else {
+                    page += "\n";
+                }
+            }
+            else {
+                String newTitle = article.getString("title").replace("tagesschau", "Tagesschau"); // "Tagesschau" groß schreiben, damit es besser aussieht, wenn es als erstes Wort kommt
+                page += String.format("=>%s %s - %s %s\n\n", newLink, newTitle, date, time);
             }
         }
 

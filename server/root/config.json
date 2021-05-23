@@ -47,6 +47,19 @@
             "mime_type": "text/gemini",
             "cmd_working_dir": "./cgi",
             "cache": false
+        },
+        {
+            "link_path": "topic",
+            "program_path": "java",
+            "args": [ "-jar", "tagesschau-mirror.jar", "action='getTopic'" ],
+            "cmd_env": [],
+            "query": {
+                "display_text": "This is an internal parameter and is not intended for manual input",
+                "private": false
+            },
+            "mime_type": "text/gemini",
+            "cmd_working_dir": "./cgi",
+            "cache": false
         }
     ],
     "config_files": []
