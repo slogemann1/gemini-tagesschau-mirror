@@ -58,58 +58,59 @@ class PageGenorator {
         return regionalHomepage;
     }
 
-    private String generateArticleList(String title, JSONArray articleList) throws Exception {
-        String page = "## " + title + "\n";
-        
-        for(Object articleObj : articleList) {
-            JSONObject article = (JSONObject)articleObj;
+    public String generateSearchPage(String query, int pageNumber) throws AppException {
+        String page = "# Suchergebnisse für '" + query + "'\n\n";
 
-            // Erstelle neue Url
-            String newApiRequest = article.getString("details"); // Wichtig!: Adresse muss geprüft werden
-            String newLink = GEMINI_DOMAIN + "/do-request?" + newApiRequest; // Eigene "do-request" Endpoint
+        try {
+            JSONObject resultsContainer = rq.getSearchResults(query, pageNumber);
+            JSONArray results = resultsContainer.getJSONArray("searchResults");
 
-            // Zeit der Publikation
-            String time = article.getString("date").substring(11, 11+5);
-
-            // Füge Link mit Titel ein und erster Satz hinzu
-            page += String.format("=>%s %s\n", newLink, article.getString("title"));
-            if(article.has("firstSentence")) {
-                page += String.format("%s - %s \n\n", time, article.get("firstSentence"));
+            if(results.length() == 0) {
+                page += "Leider keine Suchergebnisse für '" + query + "' gefunden\n";
+                page += String.format("=>%s/search Neue Suche\n", GEMINI_DOMAIN);
             }
-            else {
-                page += "\n";
+
+            int i = 1;
+            int pageSize = rq.getSearchPageSize();
+            for(Object resultObj : results) {
+                JSONObject result = (JSONObject)resultObj;
+                
+                String dateAndTime = result.getString("date");
+                String date = timeAndDateFromIso8601(dateAndTime)[0];
+
+                String title = result.getString("title");
+
+                String link = result.getString("details");
+                String newLink = GEMINI_DOMAIN + "/do-request?" + link;
+
+                page += String.format("=>%s [%d] %s\n", newLink, i + pageNumber * pageSize, title);
+                
+                if(result.has("firstSentence")) {
+                    page += String.format("%s - %s\n\n", date, result.getString("firstSentence"));
+                }
+                else {
+                    page += date + "\n\n";
+                }
+
+                i++;
             }
+
+            int totalResultCount = resultsContainer.getInt("totalItemCount");
+            String urlEncodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+            if(pageSize * (pageNumber + 1) < totalResultCount) {
+                String nextPageLink = String.format("%s/search?%s&page=%d", GEMINI_DOMAIN, urlEncodedQuery, pageNumber + 1);
+                page += "\n=>" + nextPageLink + " Nächste Seite";
+            }
+            if(pageNumber != 0) {
+                String nextPageLink = String.format("%s/search?%s&page=%d", GEMINI_DOMAIN, urlEncodedQuery, pageNumber - 1);
+                page += "\n=>" + nextPageLink + " Vorherrige Seite";
+            }
+
+            return page;
         }
-
-        return page;
-    }
-
-    private String generateRegionalArticleList(String title, JSONArray articleList) throws Exception {
-        String page = "## " + title + "\n";
-
-        int regionId = 1;
-        for(Object articleObj : articleList) {
-            JSONObject article = (JSONObject)articleObj;
-            
-            if(regionId > 16) {
-                Program.log("Api may have changed -> see PageGenerator.java at generateRegionalArticleList");
-                break;
-            }
-
-            String regionalArticlesLink = GEMINI_DOMAIN + "/regional?" + regionId;
-            String regionName = Region.uncheckedNameFromId(regionId);
-
-            String articleApiRequest = article.getString("details");
-            String articleLink = GEMINI_DOMAIN + "/do-request?" + articleApiRequest;
-
-            page += String.format("### %s\n", regionName);
-            page += String.format("=>%s Aktuelle Nachrichten\n", regionalArticlesLink);
-            page += String.format("=>%s %s\n\n", articleLink, article.getString("title"));
-
-            regionId++;
+        catch(Exception e) {
+            throw new MissingJsonValueException(e);
         }
-
-        return page;
     }
 
     public String generateNewsPage(String verifiedSafeUrl) throws AppException {
@@ -122,8 +123,9 @@ class PageGenorator {
 
             // Zeit und Datum
             String dateAndTime = newsArticle.getString("date");
-            String date = dateAndTime.substring(0, 10);
-            String time = dateAndTime.substring(11, 11 + 5);
+            String[] dateAndTimeParsed = timeAndDateFromIso8601(dateAndTime);
+            String date = dateAndTimeParsed[0];
+            String time = dateAndTimeParsed[1];
 
             // Anfang
             page += "#" + newsArticle.getString("title") + "\nTEXT_INFO_LINE_GOES_HERE\n\n";
@@ -165,8 +167,69 @@ class PageGenorator {
         return page;
     }
 
+    private String generateArticleList(String title, JSONArray articleList) throws Exception {
+        String page = "## " + title + "\n";
+        
+        for(Object articleObj : articleList) {
+            JSONObject article = (JSONObject)articleObj;
+
+            // Erstelle neue Url
+            String newApiRequest = article.getString("details"); // Wichtig!: Adresse muss geprüft werden
+            String newLink = GEMINI_DOMAIN + "/do-request?" + newApiRequest; // Eigene "do-request" Endpoint
+
+            // Zeit der Publikation
+            String time = article.getString("date").substring(11, 11+5);
+
+            // Füge Link mit Titel ein und erster Satz hinzu
+            page += String.format("=>%s %s\n", newLink, article.getString("title"));
+            if(article.has("firstSentence")) {
+                page += String.format("%s - %s\n\n", time, article.get("firstSentence"));
+            }
+            else {
+                page += "\n";
+            }
+        }
+
+        return page;
+    }
+
+    private String generateRegionalArticleList(String title, JSONArray articleList) throws Exception {
+        String page = "## " + title + "\n";
+
+        int regionId = 1;
+        for(Object articleObj : articleList) {
+            JSONObject article = (JSONObject)articleObj;
+            
+            if(regionId > 16) {
+                Program.log("Api may have changed -> see PageGenerator.java at generateRegionalArticleList");
+                break;
+            }
+
+            String regionalArticlesLink = GEMINI_DOMAIN + "/regional?" + regionId;
+            String regionName = Region.uncheckedNameFromId(regionId);
+
+            String articleApiRequest = article.getString("details");
+            String articleLink = GEMINI_DOMAIN + "/do-request?" + articleApiRequest;
+
+            page += String.format("### %s\n", regionName);
+            page += String.format("=>%s Aktuelle Nachrichten\n", regionalArticlesLink);
+            page += String.format("=>%s %s\n\n", articleLink, article.getString("title"));
+
+            regionId++;
+        }
+
+        return page;
+    }
+
     private static String removeTags(String str) {
         return str.replaceAll("<[\\w\\W]*?>", "");
+    }
+
+    private static String[] timeAndDateFromIso8601(String formattedDateTime) {
+        String[] dateAndTime = new String[2];
+        dateAndTime[0] = formattedDateTime.substring(0, 10);
+        dateAndTime[1] = formattedDateTime.substring(11, 11 + 5);
+        return dateAndTime;
     }
 
     private static String getCurrentDate() {

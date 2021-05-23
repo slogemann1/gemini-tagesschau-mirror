@@ -21,7 +21,8 @@ class RequestHandler {
         RequestParameter[] params = new RequestParameter[] {
             new RequestParameter("searchText", query),
             new RequestParameter("resultPage", page + ""),
-            new RequestParameter("pageSize", SEARCH_PAGE_SIZE + "")
+            new RequestParameter("pageSize", SEARCH_PAGE_SIZE + ""),
+            new RequestParameter("type", "story")
         };
 
         // Sende die Anfrage mit den Parametern
@@ -77,6 +78,10 @@ class RequestHandler {
         catch(Exception e) {
             throw new ApiRequestFailureException(e);
         }
+    }
+
+    public int getSearchPageSize() {
+        return SEARCH_PAGE_SIZE;
     }
 
     private JSONObject sendRequest(String endpoint, RequestParameter[] params) throws ApiRequestFailureException {

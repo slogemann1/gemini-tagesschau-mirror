@@ -3,13 +3,15 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 class Program {
     private static final String LOG_FILE = "log.txt";
 
     public static void main(String[] args) throws IOException {
         String outfilePath = null;
-        String action = null; // Possible values: doRequest, getHomepage, getRegional
+        String action = null; // Possible values: doRequest, getHomepage, getRegional, getSearch
         String query = null;
 
         // Lese argumente
@@ -26,6 +28,7 @@ class Program {
                 String[] argSplit = arg.split("query='");
                 query = argSplit.length > 1 ? argSplit[1] : "";
                 query = query.substring(0, query.length() - 1);
+                query = URLDecoder.decode(query, StandardCharsets.UTF_8.toString());
             }
         }
 
@@ -48,6 +51,9 @@ class Program {
             }
             else if(action.equals("getRegional")) {
                 fileText = handleRegionalRequest(pg, query);
+            }
+            else if(action.equals("getSearch")) {
+                fileText = handleSearchRequest(pg, query);
             }
             else {
                 returnCgiError(outfilePath);
@@ -75,6 +81,32 @@ class Program {
         }
 
         writeToFile(outfilePath, fileText);
+    }
+
+    static String handleSearchRequest(PageGenorator pg, String query) throws AppException {
+        int page;
+        String actualQuery;
+        
+        String[] queryAndPage = query.split("&page=");
+        if(queryAndPage.length > 1) {
+            try {
+                actualQuery = queryAndPage[0];
+                page = Integer.parseInt(queryAndPage[1]);
+                if(page < 0) {
+                    throw new InvalidRequestQueryException("The \"/search\" endpoint only accepts positive page numbers");
+                }
+            }
+            catch(NumberFormatException e) {
+                throw new InvalidRequestQueryException("The \"/search\" endpoint only accepts numbers with the page parameter", e);
+            }
+        }
+        else {
+            actualQuery = query;
+            page = 0;
+        }
+
+        String generatedPage = pg.generateSearchPage(actualQuery, page);
+        return generatedPage;
     }
 
     static String handleRegionalRequest(PageGenorator pg, String query) throws AppException {

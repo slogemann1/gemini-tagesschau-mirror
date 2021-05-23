@@ -34,6 +34,19 @@
             "mime_type": "text/gemini",
             "cmd_working_dir": "./cgi",
             "cache": false
+        },
+        {
+            "link_path": "search",
+            "program_path": "java",
+            "args": [ "-jar", "tagesschau-mirror.jar", "action='getSearch'" ],
+            "cmd_env": [],
+            "query": {
+                "display_text": "Suche",
+                "private": false
+            },
+            "mime_type": "text/gemini",
+            "cmd_working_dir": "./cgi",
+            "cache": false
         }
     ],
     "config_files": []
