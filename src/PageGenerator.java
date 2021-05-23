@@ -149,6 +149,9 @@ class PageGenorator {
                 else if(paraType.equals("headline")) {
                     page += "###" + removeTags(paragraph.getString("value")) + "\n";
                 }
+                else if(paraType.equals("htmlEmbed")) {
+                    page += "=>" + paragraph.getJSONObject("htmlEmbed").getString("url") + " Externe Webseite\n";
+                }
             }
 
             // Info über den Text
