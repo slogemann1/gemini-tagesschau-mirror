@@ -111,8 +111,7 @@ class Program {
             throw new InvalidRequestQueryException("The \"/topic\" endpoint is only to be used internally and accepts only specific topic parameters");
         }
 
-        String topicPageName = query + ".gmi";
-        String cacheResult = CacheHandler.retrieveCachedArticle(topicPageName);
+        String cacheResult = CacheHandler.retrieveCachedArticle(query);
         if(cacheResult == null) {
             String generatedPage = pg.generateTopicHomepage(query);
             CacheHandler.cacheArticle(topicPageName, generatedPage);

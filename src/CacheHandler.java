@@ -20,7 +20,7 @@ class CacheHandler {
 
             File file = new File(filename);
             
-            long lastModified = file.lastModified();
+            long lastModified = file.lastModified() / 1000; // ms zu s
             long currentUnixTime = Instant.now().getEpochSecond();
             if(lastModified + MAX_CACHE_DURATION < currentUnixTime) {
                 file.delete();
