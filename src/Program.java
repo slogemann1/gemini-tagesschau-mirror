@@ -5,11 +5,30 @@ import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.lang.Thread;
+import java.io.OutputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
 
 class Program {
     private static final String LOG_FILE = "log.txt";
+    private static final int PORT = 5555;
 
     public static void main(String[] args) throws IOException {
+        ServerSocket server = new ServerSocket(PORT);
+        while(true) {
+            try {
+                Socket client = server.accept();
+                ServerThread thread = new ServerThread(client); // Starte einen neuen Thread, der die argumente einliest und run() damit ausführt
+                thread.start();
+            }
+            catch(Exception _e) { continue; } // Ignoriere Fehler
+        }
+    }
+
+    public static int run(String[] args) throws IOException {
         String outfilePath = null;
         String action = null; // Possible values: doRequest, getHomepage, getRegional, getSearch, getTopic
         String query = null;
@@ -80,10 +99,11 @@ class Program {
                 exitCode = 42; // Cgi Fehler (es gibt keinen passenderen Fehler)
             }
 
-            System.exit(exitCode);
+            return exitCode;
         }
 
         writeToFile(outfilePath, fileText);
+        return 0;
     }
 
     static String handleTopicRequest(PageGenorator pg, String query) throws AppException {
@@ -197,6 +217,52 @@ class Program {
         catch(IOException e) {
             System.out.println("Failed to log " + e);
         }
+    }
+}
+
+class ServerThread extends Thread {
+    Socket client;
+
+    public ServerThread(Socket client) {
+        this.client = client;
+    }
+
+    @Override
+    public void run() {
+        try {
+            OutputStream writer = client.getOutputStream();
+            InputStream reader = client.getInputStream();
+
+            byte[] buffer = new byte[1024];
+            int bytesRead = reader.read(buffer);
+            String[] args = stringArrayFromCEncoding(buffer, bytesRead);
+            
+            int exitCode = Program.run(args);
+            writer.write((byte)exitCode);
+
+            writer.close();
+            reader.close();
+        }
+        catch(IOException e) {
+            Program.log(e.toString());
+        }
+    }
+
+    private String[] stringArrayFromCEncoding(byte[] buffer, int bufferSize) {
+        ArrayList<String> strings = new ArrayList<String>();
+        
+        String currString = "";
+        for(int i = 0; i < bufferSize; i++) {
+            if(buffer[i] != 0) {
+                currString += (char)buffer[i];
+            }
+            else {
+                strings.add(currString);
+                currString = "";
+            }
+        }
+
+        return strings.toArray(new String[strings.size()]);
     }
 }
 

@@ -3,16 +3,16 @@
     "dynamic": [
         {
             "link_path": "index.gmi",
-            "program_path": "java",
-            "args": [ "-jar", "tagesschau-mirror.jar", "action='getHomepage'" ],
+            "program_path": "python",
+            "args": [ "helper-client.py", "action='getHomepage'" ],
             "cmd_env": [],
             "cmd_working_dir": "./cgi",
             "cache": true
         },
         {
             "link_path": "do-request",
-            "program_path": "java",
-            "args": [ "-jar", "tagesschau-mirror.jar", "action='doRequest'" ],
+            "program_path": "python",
+            "args": [ "helper-client.py", "action='doRequest'" ],
             "cmd_env": [],
             "query": {
                 "display_text": "This is an internal parameter and is not intended for manual input",
@@ -24,8 +24,8 @@
         },
         {
             "link_path": "regional",
-            "program_path": "java",
-            "args": [ "-jar", "tagesschau-mirror.jar", "action='getRegional'" ],
+            "program_path": "python",
+            "args": [ "helper-client.py", "action='getRegional'" ],
             "cmd_env": [],
             "query": {
                 "display_text": "This is an internal parameter and is not intended for manual input",
@@ -37,8 +37,8 @@
         },
         {
             "link_path": "search",
-            "program_path": "java",
-            "args": [ "-jar", "tagesschau-mirror.jar", "action='getSearch'" ],
+            "program_path": "python",
+            "args": [ "helper-client.py", "action='getSearch'" ],
             "cmd_env": [],
             "query": {
                 "display_text": "Suche",
@@ -50,8 +50,8 @@
         },
         {
             "link_path": "topic",
-            "program_path": "java",
-            "args": [ "-jar", "tagesschau-mirror.jar", "action='getTopic'" ],
+            "program_path": "python",
+            "args": [ "helper-client.py", "action='getTopic'" ],
             "cmd_env": [],
             "query": {
                 "display_text": "This is an internal parameter and is not intended for manual input",
