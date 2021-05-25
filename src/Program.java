@@ -114,7 +114,7 @@ class Program {
         String cacheResult = CacheHandler.retrieveCachedArticle(query);
         if(cacheResult == null) {
             String generatedPage = pg.generateTopicHomepage(query);
-            CacheHandler.cacheArticle(topicPageName, generatedPage);
+            CacheHandler.cacheArticle(query, generatedPage);
             return generatedPage;
         }
         else {
