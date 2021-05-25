@@ -5,10 +5,13 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.time.Instant;
+import java.lang.Thread;
 
 class CacheHandler {
     private static final int MAX_CACHE_DURATION = 1800; // 1800 s = 30 min
     private static final String CACHE_DIR = "cache";
+    private static final int CACHE_CLEAR_TIME = 21600; // 6 Stunden
+    private static long lastCacheClear = Instant.now().getEpochSecond();
 
     public static String retrieveCachedArticle(String articleUrl) { // null, wenn Zeit abgelaufen oder nicht vorhanden
         String filename = getCachedName(articleUrl);
@@ -20,9 +23,7 @@ class CacheHandler {
 
             File file = new File(filename);
             
-            long lastModified = file.lastModified() / 1000; // ms zu s
-            long currentUnixTime = Instant.now().getEpochSecond();
-            if(lastModified + MAX_CACHE_DURATION < currentUnixTime) {
+            if(isInvalid(file)) {
                 file.delete();
                 return null;
             }
@@ -57,8 +58,46 @@ class CacheHandler {
         catch(IOException _e) {}
     }
 
+    public static void asyncHandleCacheClear() {
+        long currentUnixTime = Instant.now().getEpochSecond();
+        if(lastCacheClear + CACHE_CLEAR_TIME < currentUnixTime) {
+            new ClearCacheThread().start();
+            lastCacheClear = currentUnixTime;
+        }
+    }
+
+    // Das muss wegen des Threads public sein
+    public static void clearCache() throws IOException {
+        File cacheDir = new File(CACHE_DIR);
+        for(File file : cacheDir.listFiles()) {
+            if(isInvalid(file)) {
+                file.delete();
+            }
+        }
+    }
+
     private static String getCachedName(String articleUrl) {
         String filename = articleUrl.replace("https://", "").replace("/", ".") + ".gmi";
         return CACHE_DIR + File.separatorChar + filename;
+    }
+
+    private static boolean isInvalid(File file) {
+        long lastModified = file.lastModified() / 1000; // ms zu s
+        long currentUnixTime = Instant.now().getEpochSecond();
+        if(lastModified + MAX_CACHE_DURATION < currentUnixTime) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+class ClearCacheThread extends Thread {
+    @Override
+    public void run() {
+        try {
+            CacheHandler.clearCache();
+        }
+        catch(Exception _e) {}
     }
 }

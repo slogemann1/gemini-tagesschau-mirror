@@ -22,6 +22,9 @@ class Program {
             try {
                 Socket client = server.accept();
                 ServerThread thread = new ServerThread(client); // Starte einen neuen Thread, der die argumente einliest und run() damit ausführt
+
+                CacheHandler.asyncHandleCacheClear(); // Falls Dateien aus dem Cache gelöscht werden sollen, starte einen neuen Thread
+
                 thread.start();
             }
             catch(Exception _e) { continue; } // Ignoriere Fehler
